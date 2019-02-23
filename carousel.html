@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Carousel</title>
+</head>
+<style>
+    .slide {
+        display: flex;
+        position: relative;
+        left: 0;
+    }
+
+    .carousel {
+        overflow: hidden;
+        width: 500px;
+    }
+
+    .btn {
+        width: 50px;
+        height: 50px;
+        cursor: pointer;
+    }
+
+    .track {
+        display: flex;
+        align-items: center;
+    }
+
+    .indicator {
+        width: 600px;
+        display: flex;
+        justify-content: center;
+        padding: 0;
+    }
+
+    .indicator li {
+        list-style: none;
+        border: 8px solid #999;
+        margin: 0 10px;
+        border-radius: 50%;
+    }
+
+    li.li-active {
+        border: 8px solid red;
+    }
+
+    li:hover {
+        cursor: pointer;
+    }
+
+    .contain {
+        width: 600px;
+    }
+    button{
+        border: none;
+        background: none;
+        outline: none;
+    }
+</style>
+<body>
+<div class="contain">
+    <div class="track">
+        <button class="left"><img src="img/left.png" alt="" class="btn"></button>
+        <div class="carousel">
+            <div class="slide">
+                <img src="img/1.jpg" alt="">
+                <img src="img/2.jpg" alt="">
+                <img src="img/3.jpg" alt="">
+                <img src="img/1.jpg" alt="">
+            </div>
+        </div>
+        <button class="right"><img src="img/right.png" alt="" class="btn"></button>
+    </div>
+    <ul class="indicator">
+        <li class="li-active"></li>
+        <li></li>
+        <li></li>
+    </ul>
+</div>
+</body>
+<script>
+    var contain = document.querySelector('.contain');//获取需要改变left的元素
+    var slide = document.querySelector('.slide');//获取需要改变left的元素
+    var leftBtn = document.querySelector('.left');//获取左边按钮
+    var rightBtn = document.querySelector('.right');//获取右边按钮
+    var indicator = document.querySelector('.indicator');//指示灯父元素
+    var indicatorChild = indicator.children;//指示灯的个数
+    var slideLength = slide.children.length;//轮播图个数
+    var timer = null;//定时器初始为null
+    var index = 0;//计数
+    window.onload = function () {
+        var everyTime = 2000;//轮播的间隔时间
+        autoPlay(everyTime);//页面打开后自动开启播放
+        //当有鼠标划过时停止定时器
+        contain.onmouseenter = function () {
+            clearInterval(timer);
+        };
+        //鼠标摞开时启动定时器
+        contain.onmouseleave = function () {
+            autoPlay(everyTime);
+        };
+        //点击左边按钮
+        leftBtn.onclick = function () {
+            if (index == 0) {
+                play(-(500 * (slideLength - 2)),slideLength - 2,0);
+                index = slideLength - 2;
+            } else {
+                index--;
+                play(-(500 * index),index,index +1);
+            }
+        };
+        //点击右边按钮
+        rightBtn.onclick = function () {
+            index++;
+            if (index == slideLength - 1) {
+                criticality();
+            } else {
+                if(index > slideLength-1){
+                    return;
+                }
+                play(-(500 * index),index,index -1);
+            }
+        };
+        //指示灯点击时
+        for (let i = 0; i < indicatorChild.length; i++) {
+            indicatorChild[i].onmouseenter = function () {
+                //先将同级class移除；
+                for (var j = 0; j < indicatorChild.length; j++) {
+                    if (indicatorChild[j].className == 'li-active') {
+                        indicatorChild[j].className = '';
+                    }
+                }
+                //设置所点击的元素class,并移动到指示灯所在图片
+                play(-(500 * i),i,undefined);
+                index = i;
+            }
+        }
+
+    };
+    //自动播放
+    function autoPlay(period) {
+        timer = setInterval(function () {
+            index++;
+            if (index == slideLength - 1) {
+                clearInterval(timer);
+                criticality();
+                return autoPlay(period);
+            } else {
+                if(index > slideLength-1){
+                    return;
+                }
+                play(-(500 * index),index,index -1);
+            }
+        }, period)
+    }
+    //轮播公共方法
+    function play(left,activeIndex,emptyIndex) {
+        //1、图片移动left px；
+        slide.style.left = left + 'px';
+        slide.style.transition = 'left 1.5s';
+        //2、改变指示灯颜色
+        indicatorChild[activeIndex].className = 'li-active';
+        if(emptyIndex!=undefined){
+            indicatorChild[emptyIndex].className = '';
+        }
+    }
+    function criticality() {
+        play(-(500 * index),0,slideLength - 2);
+        var now=(new Date()).getTime()+1500;
+        if((new Date()).getTime()<=now){
+            rightBtn.disabled=true;
+            setTimeout(function () {
+                rightBtn.disabled=false;
+            },now-(new Date()).getTime())
+        }
+        setTimeout(function () {
+            slide.style.left = 0 + 'px';
+            slide.style.transition = 'left 0s';
+            index = 0;
+        }, 1500);
+    }
+</script>
+</html>
